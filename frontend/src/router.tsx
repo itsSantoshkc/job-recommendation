@@ -1,117 +1,160 @@
-import { createRouter, createRootRoute, createRoute, Outlet } from '@tanstack/react-router'
-import { api } from './services/api'
-import type { User } from './types'
+import {
+  createRouter,
+  createRootRoute,
+  createRoute,
+  Outlet,
+} from "@tanstack/react-router";
 
-// Initialize router context from the mock session so route context reflects
-// the signed-in user on the very first load (including direct deep links).
+import { api } from "./services/api";
+import type { User } from "./types";
+
+import { LoginPage } from "./features/auth/LoginPage";
+import { JobListPage } from "./features/jobs/JobListPage";
+import { JobDetailPage } from "./features/jobs/JobDetailPage";
+import { RegisterPage } from "./features/auth/RegisterPage";
+import { ResumeBuilderPage } from "./features/resume/ResumeBuilderPage";
+import { ApplicationsPage } from "./features/applications/ApplicationsPage";
+
+import { CompanyLayout } from "./features/company/CompanyLayout";
+import { CompanyDashboardPage } from "./features/company/CompanyDashboardPage";
+import { CompanyNewJobPage } from "./features/company/CompanyNewJobPage";
+import { CompanyApplicationsPage } from "./features/company/CompanyApplicationsPage";
+import { CompanyApplicationDetailPage } from "./features/company/CompanyApplicationDetailPage";
+import { CompanyPastJobsPage } from "./features/company/CompanyPastJobsPage";
+
+// Initialize router context from the mock session.
 const initialUser = ((): User | null => {
-  if (typeof window === 'undefined') return null
+  if (typeof window === "undefined") return null;
+
   try {
-    const stored = localStorage.getItem('mock_user')
-    return stored ? (JSON.parse(stored) as User) : null
+    const stored = localStorage.getItem("mock_user");
+    return stored ? (JSON.parse(stored) as User) : null;
   } catch {
-    return null
+    return null;
   }
-})()
+})();
 
+// Root route
 export const rootRoute = createRootRoute({
-  component: () => (
-    <html lang="en">
-      <head />
-      <body>
-        <Outlet />
-      </body>
-    </html>
-  ),
-})
+  component: RootComponent,
+});
 
+function RootComponent() {
+  return <Outlet />;
+}
+
+// Home / Job listing
 const indexRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: '/',
-  component: () => import('./features/jobs/JobListPage').then(m => m.JobListPage),
-})
+  path: "/",
+  component: JobListPage,
+});
 
+// Job details
 const jobDetailRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: '/jobs/$jobId',
-  component: () => import('./features/jobs/JobDetailPage').then(m => m.JobDetailPage),
-})
+  path: "/jobs/$jobId",
+  component: JobDetailPage,
+});
 
+// Authentication
 const loginRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: '/login',
-  component: () => import('./features/auth/LoginPage').then(m => m.LoginPage),
-})
+  path: "/login",
+  component: LoginPage,
+});
 
 const registerRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: '/register',
-  component: () => import('./features/auth/RegisterPage').then(m => m.RegisterPage),
-})
+  path: "/register",
+  component: RegisterPage,
+});
 
+// Resume builder
 const resumeBuilderRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: '/resume-builder',
-  component: () => import('./features/resume/ResumeBuilderPage').then(m => m.ResumeBuilderPage),
+  path: "/resume-builder",
+  component: ResumeBuilderPage,
   beforeLoad: async () => {
-    const user = await api.auth.getSession()
-    if (!user) throw { redirect: '/login?redirect=/resume-builder' }
-    if (user.role !== 'user') throw { redirect: '/company/dashboard' }
-  },
-})
+    const user = await api.auth.getSession();
 
+    if (!user) {
+      throw { redirect: "/login?redirect=/resume-builder" };
+    }
+
+    if (user.role !== "user") {
+      throw { redirect: "/company/dashboard" };
+    }
+  },
+});
+
+// Applications
 const applicationsRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: '/applications',
-  component: () => import('./features/applications/ApplicationsPage').then(m => m.ApplicationsPage),
+  path: "/applications",
+  component: ApplicationsPage,
   beforeLoad: async () => {
-    const user = await api.auth.getSession()
-    if (!user) throw { redirect: '/login?redirect=/applications' }
-    if (user.role !== 'user') throw { redirect: '/company/dashboard' }
-  },
-})
+    const user = await api.auth.getSession();
 
+    if (!user) {
+      throw { redirect: "/login?redirect=/applications" };
+    }
+
+    if (user.role !== "user") {
+      throw { redirect: "/" };
+    }
+  },
+});
+
+// Company routes
 const companyRootRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: '/company',
-  component: () => import('./features/company/CompanyLayout').then(m => m.CompanyLayout),
+  path: "/company",
+  component: CompanyLayout,
   beforeLoad: async () => {
-    const user = await api.auth.getSession()
-    if (!user) throw { redirect: '/login?redirect=/company/dashboard' }
-    if (user.role !== 'company') throw { redirect: '/' }
+    const user = await api.auth.getSession();
+
+    if (!user) {
+      throw { redirect: "/login?redirect=/company/dashboard" };
+    }
+
+    if (user.role !== "company") {
+      throw { redirect: "/" };
+    }
   },
-})
+});
 
 const companyDashboardRoute = createRoute({
   getParentRoute: () => companyRootRoute,
-  path: '/dashboard',
-  component: () => import('./features/company/CompanyDashboardPage').then(m => m.CompanyDashboardPage),
-})
+  path: "/dashboard",
+  component: CompanyDashboardPage,
+});
 
 const companyNewJobRoute = createRoute({
   getParentRoute: () => companyRootRoute,
-  path: '/jobs/new',
-  component: () => import('./features/company/CompanyNewJobPage').then(m => m.CompanyNewJobPage),
-})
+  path: "/jobs/new",
+  component: CompanyNewJobPage,
+});
 
 const companyApplicationsRoute = createRoute({
   getParentRoute: () => companyRootRoute,
-  path: '/applications',
-  component: () => import('./features/company/CompanyApplicationsPage').then(m => m.CompanyApplicationsPage),
-})
+  path: "/applications",
+  component: CompanyApplicationsPage,
+});
 
 const companyApplicationDetailRoute = createRoute({
   getParentRoute: () => companyRootRoute,
-  path: '/applications/$applicationId',
-  component: () => import('./features/company/CompanyApplicationDetailPage').then(m => m.CompanyApplicationDetailPage),
-})
+  path: "/applications/$applicationId",
+  component: CompanyApplicationDetailPage,
+});
 
 const companyPastJobsRoute = createRoute({
   getParentRoute: () => companyRootRoute,
-  path: '/jobs/past',
-  component: () => import('./features/company/CompanyPastJobsPage').then(m => m.CompanyPastJobsPage),
-})
+  path: "/jobs/past",
+  component: CompanyPastJobsPage,
+});
 
+// Route tree
 const routeTree = rootRoute.addChildren([
   indexRoute,
   jobDetailRoute,
@@ -119,6 +162,7 @@ const routeTree = rootRoute.addChildren([
   registerRoute,
   resumeBuilderRoute,
   applicationsRoute,
+
   companyRootRoute.addChildren([
     companyDashboardRoute,
     companyNewJobRoute,
@@ -126,12 +170,18 @@ const routeTree = rootRoute.addChildren([
     companyApplicationDetailRoute,
     companyPastJobsRoute,
   ]),
-])
+]);
 
-export const router = createRouter({ routeTree, context: { user: initialUser } })
+// Router
+export const router = createRouter({
+  routeTree,
+  context: {
+    user: initialUser,
+  },
+});
 
-declare module '@tanstack/react-router' {
+declare module "@tanstack/react-router" {
   interface Register {
-    router: typeof router
+    router: typeof router;
   }
 }

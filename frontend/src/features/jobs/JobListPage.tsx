@@ -34,7 +34,7 @@ const shifts: { value: JobShift; label: string }[] = [
 
 function JobCard({ job }: { job: Job }) {
   return (
-    <Link to="/jobs/$jobId" params={{ jobId: job.id }} className="block">
+    <Link to={`/jobs/${job.id}` as any} className="block">
       <Card className="hover:shadow-md transition-shadow h-full">
         <CardContent className="p-6">
           <div className="flex gap-4">
@@ -210,7 +210,7 @@ export function JobListPage() {
   const [recommendModalOpen, setRecommendModalOpen] = useState(false)
   const [selectedResumeId, setSelectedResumeId] = useState<string | null>(null)
 
-  const { data: jobsData, isLoading, error, fetchNextPage, hasNextPage, isFetchingNextPage } = useJobs(filters)
+  const { data: jobsData, isLoading, error } = useJobs(filters)
 
   const debouncedSearch = useDebouncedCallback((value: string) => {
     setFilters(prev => ({ ...prev, search: value || undefined, page: 1 }))
@@ -254,7 +254,7 @@ export function JobListPage() {
   const allJobs: Job[] =
     recommendedJobs && recommendedJobs.length > 0
       ? recommendedJobs
-      : jobsData?.pages?.[0]?.data || []
+      : jobsData?.data || []
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
@@ -262,7 +262,7 @@ export function JobListPage() {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Find Your Next Job</h1>
           <p className="mt-2 text-gray-600 dark:text-gray-400">
-            Search {jobsData?.pages?.[0]?.total ?? 0} available positions
+            Search {jobsData?.total ?? 0} available positions
           </p>
         </div>
 
@@ -324,19 +324,6 @@ export function JobListPage() {
                 <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
                   {allJobs.map(job => <JobCard key={job.id} job={job} />)}
                 </div>
-
-                {hasNextPage && (
-                  <div className="mt-8 text-center">
-                    <Button
-                      variant="outline"
-                      onClick={() => fetchNextPage()}
-                      disabled={isFetchingNextPage}
-                      className="w-full sm:w-auto"
-                    >
-                      {isFetchingNextPage ? 'Loading...' : 'Load More Jobs'}
-                    </Button>
-                  </div>
-                )}
 
                 {error && (
                   <div className="mt-8 text-center text-red-500">

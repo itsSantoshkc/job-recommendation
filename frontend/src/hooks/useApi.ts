@@ -1,16 +1,12 @@
-import { useInfiniteQuery, useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { api } from '../services/api'
 import { queryKeys } from '../lib/queryClient'
 import type { Job, JobFilters, Application, ApplicationStatus, Resume } from '../types'
 
 export function useJobs(filters: JobFilters = {}) {
-  const { page, ...stableFilters } = filters
-  return useInfiniteQuery({
-    queryKey: queryKeys.jobs.list(stableFilters),
-    queryFn: ({ pageParam = 1 }) => api.jobs.list({ ...stableFilters, page: pageParam }),
-    getNextPageParam: (lastPage) =>
-      lastPage.page < lastPage.totalPages ? lastPage.page + 1 : undefined,
-    initialPageParam: 1,
+  return useQuery({
+    queryKey: queryKeys.jobs.list(filters),
+    queryFn: () => api.jobs.list(filters),
     placeholderData: (prev) => prev,
   })
 }
